@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/*
+  «Изумруд» — дизайн-токены.
+  Прохладная минеральная основа, глубокий изумрудный, один фирменный приём:
+  изумрудная огранка (срезанные углы) на медиа и главных кнопках.
+*/
+@theme {
+  --color-ink: #12302a;
+  --color-muted: #56695f;
+  --color-emerald: #0b6e4f;
+  --color-emerald-deep: #084c37;
+  --color-tint: #d5e6db;
+  --color-mineral: #e9eeea;
+  --color-paper: #f6f8f5;
+  --color-line: #c9d4cc;
+  --color-garnet: #a5402d;
+
+  --font-serif: "Literata Variable", "Literata", Georgia, serif;
+  --font-sans: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --text-display: 2.75rem;
+  --text-display--line-height: 1.08;
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.18;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    background: var(--color-mineral);
+    color: var(--color-ink);
+  }
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    background: var(--color-mineral);
+    min-height: 100dvh;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+    font-weight: 560;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-emerald);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Изумрудная огранка: восьмиугольник со срезанными углами. */
+  .facet {
+    --cut: 14px;
+    clip-path: polygon(
+      var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)),
+      calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)), 0 var(--cut)
+    );
+  }
+  .facet-sm { --cut: 8px; }
+  .facet-lg { --cut: 22px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0 1.5rem;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+
+  /* Главная кнопка огранена; фокус — внутренняя рамка, т.к. clip-path срезает обычный outline. */
+  .btn-primary {
+    --cut: 10px;
+    background: var(--color-emerald);
+    color: #fff;
+    clip-path: polygon(
+      var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)),
+      calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)), 0 var(--cut)
+    );
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--color-emerald-deep); }
+  .btn-primary:focus-visible { outline: none; box-shadow: inset 0 0 0 3px var(--color-ink), inset 0 0 0 5px #fff; }
+
+  .btn-secondary {
+    border: 1px solid var(--color-line);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border-radius: 4px;
+  }
+  .btn-secondary:hover:not(:disabled) { border-color: var(--color-emerald); }
+
+  .btn-quiet {
+    color: var(--color-emerald);
+    padding: 0;
+    min-height: 2.75rem;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+  .btn-quiet:hover { text-decoration-thickness: 2px; }
+  .btn-danger { color: var(--color-garnet); }
+
+  .field {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0 1rem;
+    background: var(--color-paper);
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+    font-size: 1.0625rem;
+    color: var(--color-ink);
+  }
+  .field:focus { border-color: var(--color-emerald); outline: none; box-shadow: 0 0 0 3px var(--color-tint); }
+
+  .panel {
+    background: var(--color-paper);
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+  }
+
+  /* Текст статьи: Literata, умеренная мера строки, спокойный ритм. */
+  .reading {
+    font-family: var(--font-serif);
+    font-size: 1.1875rem;
+    line-height: 1.7;
+    max-width: 38rem;
+  }
+  .reading p, .reading ul, .reading ol, .reading blockquote, .reading figure { margin: 0 0 1.25em; }
+  .reading h2 { font-size: 1.5rem; line-height: 1.25; margin: 2em 0 0.6em; }
+  .reading h3 { font-size: 1.25rem; line-height: 1.3; margin: 1.6em 0 0.5em; }
+  .reading ul { list-style: disc; padding-left: 1.25em; }
+  .reading ol { list-style: decimal; padding-left: 1.25em; }
+  .reading li { margin-bottom: 0.35em; }
+  .reading a { color: var(--color-emerald); text-decoration: underline; text-underline-offset: 3px; }
+  .reading blockquote { border-left: 3px solid var(--color-emerald); padding-left: 1em; font-style: italic; color: var(--color-muted); }
+  .reading img { width: 100%; height: auto; border-radius: 4px; }
+}

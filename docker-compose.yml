@@ -1,0 +1,82 @@
+# Всё вместе на одном сервере: база, сайт, фоновые задачи, админка.
+#   cp .env.example .env   # заполнить
+#   docker compose up -d --build
+#   docker compose exec app npm run directus:setup   # один раз, после первого запуска Directus
+# Сайт — порт 3000, админка — порт 8055. Наружу их выставляет обратный прокси с HTTPS (Caddy, nginx).
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: izumrud
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d izumrud"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/izumrud
+      STORAGE_LOCAL_DIR: /app/storage
+      DIRECTUS_URL: http://directus:8055
+    ports:
+      - "3000:3000"
+    volumes:
+      - storage:/app/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/izumrud
+      STORAGE_LOCAL_DIR: /app/storage
+    command: ["npm", "run", "worker"]
+    volumes:
+      - storage:/app/storage
+    depends_on:
+      app:
+        condition: service_started
+
+  # Админка: работает с теми же таблицами, файлы кладёт в общий том storage.
+  directus:
+    image: directus/directus:11
+    restart: unless-stopped
+    environment:
+      KEY: ${DIRECTUS_KEY}
+      SECRET: ${DIRECTUS_SECRET}
+      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
+      PUBLIC_URL: ${DIRECTUS_PUBLIC_URL:-http://localhost:8055}
+      DB_CLIENT: pg
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: izumrud
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      STORAGE_LOCATIONS: local
+      STORAGE_LOCAL_ROOT: /directus/uploads
+      # Служебные таблицы входа и push в админке не нужны. Участники, подписки и платежи видны администратору.
+      DB_EXCLUDE_TABLES: spatial_ref_sys,auth_codes,sessions,push_subscriptions
+    ports:
+      - "8055:8055"
+    volumes:
+      - storage:/directus/uploads
+    depends_on:
+      app:
+        condition: service_started
+
+volumes:
+  pgdata:
+  storage:
